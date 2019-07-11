@@ -1,6 +1,6 @@
 {
   "name": "react-visual-editor-framework",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "react-visual-editor-framework React component",
   "main": "lib/index.js",
   "module": "es/index.js",
