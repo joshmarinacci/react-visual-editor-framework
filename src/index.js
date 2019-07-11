@@ -10,6 +10,8 @@ export PropSheet, {TYPES as PROP_TYPES} from "./PropSheet"
 export TreeItemProvider, {getLoginURL, TREE_ITEM_PROVIDER, getDocsURL, getScriptsURL, getAssetsURL, getInfoURL, getUserURL} from "./TreeItemProvider"
 
 export {toQueryString, makePoint, setQuery, parseOptions, on, genID} from "./utils"
+import "../css/components.css"
+import "../css/grid.css"
 
 export default class extends Component {
   render() {

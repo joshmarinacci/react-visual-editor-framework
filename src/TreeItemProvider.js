@@ -153,6 +153,7 @@ export default class TreeItemProvider extends TreeItemProviderInterface {
         URLS.BASE = calculateServerUrl(options.SERVER_URL)
         console.log("using server",URLS.BASE)
         this.AuthModule = options.AuthModule || new DummyAuthModule()
+        this.AuthModule.init()
     }
 
     on(type, cb) {
