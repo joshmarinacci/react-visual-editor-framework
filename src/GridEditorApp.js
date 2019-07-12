@@ -1,5 +1,5 @@
 import React, {Component} from 'react'
-import {PopupManager, VBox} from 'appy-comps'
+import {PopupManager, VBox, PopupManagerContext} from 'appy-comps'
 import {makePoint} from './utils'
 
 const GridLayout = (props) => {
@@ -59,21 +59,22 @@ export const ToggleButton = (props) => {
 }
 
 export const MenuPopup = (props) => {
-    return <VBox className={"popup-menu"}>
-        {props.actions.map((act,i)=>{
-            if(act.divider) return <div className="divider" key={i}></div>
-            let enabled = false
-            if(typeof act.enabled === 'undefined') enabled = true
-            if(act.enabled === true) enabled = true
-            return <button  key={i}
-                            disabled={!enabled}
-                            onClick={()=>{
-                PopupManager.hide();
-                if(act.fun) act.fun()
-            }}><i className={act.icon}/> {act.title}</button>
-        })}
-    </VBox>
-
+    return <PopupManagerContext.Consumer>{pm => (
+            <VBox className={"popup-menu"}>
+            {props.actions.map((act,i)=>{
+                if(act.divider) return <div className="divider" key={i}></div>
+                let enabled = false
+                if(typeof act.enabled === 'undefined') enabled = true
+                if(act.enabled === true) enabled = true
+                return <button  key={i}
+                                disabled={!enabled}
+                                onClick={()=>{
+                                    pm.hide();
+                                    if(act.fun) act.fun()
+                                }}><i className={act.icon}/> {act.title}</button>
+            })}
+            </VBox>
+    )}</PopupManagerContext.Consumer>
 }
 
 export default class GridEditorApp extends Component {

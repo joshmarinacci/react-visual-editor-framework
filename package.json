@@ -25,7 +25,7 @@
     "qrcode": "^1.4.0"
   },
   "peerDependencies": {
-    "react": "16.x"
+    "react": "^16.8.6"
   },
   "devDependencies": {
     "nwb": "0.23.x",

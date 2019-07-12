@@ -1,14 +1,15 @@
 import React, { Component } from 'react';
 import selMan, {SELECTION_MANAGER} from "./SelectionManager";
 import {TREE_ITEM_PROVIDER} from './TreeItemProvider';
-import {PopupManager, VBox} from "appy-comps";
+import {PopupManager, PopupManagerContext, VBox} from "appy-comps"
 import {Spacer} from './GridEditorApp'
 
 import "../css/treetable.css"
 
 
 const ContextMenu = (props) => {
-    return <VBox className={"popup-menu"}>
+    return <PopupManagerContext.Consumer>{pm => (
+    <VBox className={"popup-menu"}>
         {props.menu.map((item,i)=>{
             if(item.divider) return <div className="divider" key={i}></div>
             let enabled = false
@@ -17,12 +18,13 @@ const ContextMenu = (props) => {
             return <button key={i}
                            disabled={!enabled}
                            onClick={()=>{
-                PopupManager.hide()
+                pm.hide()
                 if(item.fun) item.fun()
             }}
             ><i className={item.icon}/> {item.title}</button>
         })}
     </VBox>
+    )}</PopupManagerContext.Consumer>
 }
 
 class TreeTableItem extends Component {
@@ -39,7 +41,7 @@ class TreeTableItem extends Component {
         selMan.setSelection(this.props.node)
         if(this.props.provider.calculateContextMenu) {
             const menu = this.props.provider.calculateContextMenu(this.props.node)
-            PopupManager.show(<ContextMenu menu={menu}/>,e.target)
+            this.context.show(<ContextMenu menu={menu}/>,e.target)
         }
     }
     toggleItemCollapsed = (e) => {
@@ -107,6 +109,7 @@ class TreeTableItem extends Component {
 
     }
 }
+TreeTableItem.contextType = PopupManagerContext
 
 
 
