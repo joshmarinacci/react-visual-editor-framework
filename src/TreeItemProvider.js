@@ -141,7 +141,9 @@ function calculateServerUrl(SERVER_URL) {
 }
 
 class DummyAuthModule {
-
+    init() {
+        console.log("dummy auth init()")
+    }
 }
 
 export default class TreeItemProvider extends TreeItemProviderInterface {

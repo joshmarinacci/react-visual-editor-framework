@@ -12,16 +12,3 @@ export TreeItemProvider, {getLoginURL, TREE_ITEM_PROVIDER, getDocsURL, getScript
 export {toQueryString, makePoint, setQuery, parseOptions, on, genID} from "./utils"
 import "../css/components.css"
 import "../css/grid.css"
-
-export default class extends Component {
-  render() {
-    return <div>
-      <h2>This is the editor</h2>
-      <Dialog visible={true}>
-        <header>dialog header</header>
-        <div>dialog body</div>
-        <footer>dialog footer</footer>
-      </Dialog>
-    </div>
-  }
-}
