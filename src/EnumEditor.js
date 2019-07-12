@@ -1,5 +1,5 @@
 import React, {Component} from "react";
-import {HBox, PopupManager, VBox} from "appy-comps";
+import {HBox, PopupManager, VBox, PopupManagerContext} from "appy-comps";
 
 const EnumPicker = (props) => {
     const Rend = props.renderer
@@ -21,7 +21,7 @@ const DefaultEnumRenderer = (props) => {
     return <span>{value}</span>
 }
 
-export class EnumEditor extends Component {
+class EnumEditorImpl extends Component {
     calculateRenderer() {
         const proxy = this.props.def
         const obj = this.props.obj
@@ -41,7 +41,7 @@ export class EnumEditor extends Component {
     }
 
     open = (e) => {
-        PopupManager.show(<EnumPicker
+        this.context.show(<EnumPicker
             values={this.calculateValues()}
             renderer={this.calculateRenderer()}
             onSelect={this.selectValue}
@@ -49,7 +49,7 @@ export class EnumEditor extends Component {
         />, e.target)
     }
     selectValue = (value) => {
-        PopupManager.hide()
+        this.context.hide()
         this.props.onChange(value)
     }
     renderValue = (value) => {
@@ -63,3 +63,5 @@ export class EnumEditor extends Component {
         return <button onClick={this.open}>{this.renderValue(this.props.value)}</button>
     }
 }
+EnumEditorImpl.contextType = PopupManagerContext;
+export const EnumEditor = EnumEditorImpl
