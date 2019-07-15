@@ -21,6 +21,32 @@ export default class RectDocEditor extends TreeItemProvider {
             color:'blue',
         }
         root.children.push(square1)
+        const square2 = {
+            type:'square',
+            id:'sq2',
+            x:150,
+            y:20,
+            w:30,
+            h:30,
+            color:'red',
+        }
+        root.children.push(square2)
+        const square3 = {
+            type:'square',
+            id:'sq3',
+            x:30,
+            y:220,
+            w:30,
+            h:30,
+            color:'green',
+        }
+        root.children.push(square3)
+
+        const g1 = {
+            type:'group',
+            id:'g1',
+        }
+        root.children.push(g1)
         return root
     }
 
@@ -57,6 +83,28 @@ export default class RectDocEditor extends TreeItemProvider {
             oldValue:def.value,
             newValue:value
         })
+    }
+
+    canAddChild(item,target) {
+        console.log("target is",item.type)
+        if(item.type === 'root') return true
+        return false
+    }
+    canBeSibling(item,target) {
+        if(target.type === 'square' && item.type === 'square') return true
+        return false
+    }
+    moveChildAfterSibling(src,dst) {
+        const nold = this.root.children.indexOf(src)
+        this.root.children.splice(nold,1)
+
+        const nnew = this.root.children.indexOf(dst)
+        this.root.children.splice(nnew+1,0,src)
+    }
+    moveChildToNewParent(src,dst) {
+        const nold = this.root.children.indexOf(src)
+        this.root.children.splice(nold,1)
+        this.root.children.push(src)
     }
 
 

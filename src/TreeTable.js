@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import selMan, {SELECTION_MANAGER} from "./SelectionManager";
 import {TREE_ITEM_PROVIDER} from './TreeItemProvider';
-import {PopupManager, PopupManagerContext, VBox} from "appy-comps"
+import {PopupManagerContext, VBox} from "appy-comps"
 import {Spacer} from './GridEditorApp'
 
 import "../css/treetable.css"
@@ -11,7 +11,7 @@ const ContextMenu = (props) => {
     return <PopupManagerContext.Consumer>{pm => (
     <VBox className={"popup-menu"}>
         {props.menu.map((item,i)=>{
-            if(item.divider) return <div className="divider" key={i}></div>
+            if(item.divider) return <div className="divider" key={i}/>
             let enabled = false
             if(typeof item.enabled === 'undefined') enabled = true
             if(item.enabled === true) enabled = true
@@ -179,7 +179,7 @@ export default class TreeTable extends Component {
             selMan.setDropTarget(null)
         }
     }
-    /*
+
     onDragEnd = (e,item) => {
         //handle external case
         if(!this.state.internalDrag){
@@ -189,36 +189,42 @@ export default class TreeTable extends Component {
             return
         }
 
-        const graph = this.props.provider.getDataGraph()
+        // const graph = this.props.provider.getDataGraph()
         if(!this.state.dragTarget) return
         if(!this.state.dropTarget) return
-        const src = fetchGraphObject(graph,this.state.dragTarget)
-        const dst = fetchGraphObject(graph,this.state.dropTarget)
+        // const src = fetchGraphObject(graph,this.state.dragTarget)
+        // const dst = fetchGraphObject(graph,this.state.dropTarget)
+        const src = this.state.dragTarget
+        const dst = this.state.dropTarget
 
 
         //can't drop onto self
-        if(dst.id === src.id) {
+        if(dst === src) {
             this.setState({dragTarget:null, internalDrag:false})
             selMan.setDropTarget(null)
             return
         }
 
 
+        //move to new location
+        const prov = this.props.provider
         //remove from old location
-        removeFromParent(graph,src)
+        // removeFromParent(graph,src)
 
         const dt = selMan.getDropType()
         if(dt === 'parent') {
-            graph.setProperty(src.id,'parent',dst.id)
-            graph.insertAfter(dst.children,null,src.id)
+            prov.moveChildToNewParent(src,dst)
+            // graph.setProperty(src.id,'parent',dst.id)
+            // graph.insertAfter(dst.children,null,src.id)
         } else {
-            const parent2 = fetchGraphObject(graph,dst.parent)
-            graph.setProperty(src.id, 'parent', parent2.id)
-            graph.insertAfter(parent2.children, dst.id, src.id)
+            prov.moveChildAfterSibling(src,dst)
+            // const parent2 = fetchGraphObject(graph,dst.parent)
+            // graph.setProperty(src.id, 'parent', parent2.id)
+            // graph.insertAfter(parent2.children, dst.id, src.id)
         }
         this.setState({dragTarget:null})
         selMan.setDropTarget(null)
-    }*/
+    }
     onDrop = (e,item) => {
         if(!this.state.internalDrag) {
             e.stopPropagation()
