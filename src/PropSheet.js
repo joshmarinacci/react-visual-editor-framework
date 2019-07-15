@@ -50,6 +50,9 @@ class PropEditor extends Component {
         if(this.props.def.isType(TYPES.NUMBER)) this.updateNum(e.target.value)
         if(this.props.def.isType(TYPES.BOOLEAN)) this.setState({value:e.target.checked})
     }
+    revert = (e) => {
+        this.setState({value:this.props.def.getValue()})
+    }
     customChanged = value => {
         if(this.props.def.isType(TYPES.COLOR)) return this.colorChanged(value)
         this.setState({value:value})
@@ -100,7 +103,13 @@ class PropEditor extends Component {
         this.props.def.setValue(color)
     }
     commit = () => {
-        this.props.def.setValue(this.state.value)
+        try {
+            this.props.def.setValue(this.state.value)
+        } catch (e) {
+            console.log("commit threw an error",e)
+            console.log("message is",e.message)
+            this.revert()
+        }
     }
     openColorEditor = (e) => {
         PopupManager.show(<HSLUVColorPicker onSelect={this.colorChanged} value={this.state.value}/>, e.target)
