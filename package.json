@@ -1,6 +1,6 @@
 {
   "name": "react-visual-editor-framework",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "react-visual-editor-framework React component",
   "main": "lib/index.js",
   "module": "es/index.js",
@@ -20,7 +20,7 @@
     "test:watch": "nwb test-react --server"
   },
   "dependencies": {
-    "appy-comps": "^0.1.17",
+    "appy-comps": "^0.1.18",
     "hsluv": "0.0.3",
     "qrcode": "^1.4.0"
   },
