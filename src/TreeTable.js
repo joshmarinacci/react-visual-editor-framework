@@ -189,11 +189,8 @@ export default class TreeTable extends Component {
             return
         }
 
-        // const graph = this.props.provider.getDataGraph()
         if(!this.state.dragTarget) return
         if(!this.state.dropTarget) return
-        // const src = fetchGraphObject(graph,this.state.dragTarget)
-        // const dst = fetchGraphObject(graph,this.state.dropTarget)
         const src = this.state.dragTarget
         const dst = this.state.dropTarget
 
@@ -208,19 +205,12 @@ export default class TreeTable extends Component {
 
         //move to new location
         const prov = this.props.provider
-        //remove from old location
-        // removeFromParent(graph,src)
 
         const dt = selMan.getDropType()
         if(dt === 'parent') {
             prov.moveChildToNewParent(src,dst)
-            // graph.setProperty(src.id,'parent',dst.id)
-            // graph.insertAfter(dst.children,null,src.id)
         } else {
             prov.moveChildAfterSibling(src,dst)
-            // const parent2 = fetchGraphObject(graph,dst.parent)
-            // graph.setProperty(src.id, 'parent', parent2.id)
-            // graph.insertAfter(parent2.children, dst.id, src.id)
         }
         this.setState({dragTarget:null})
         selMan.setDropTarget(null)
