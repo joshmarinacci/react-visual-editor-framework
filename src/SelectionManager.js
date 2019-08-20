@@ -37,7 +37,10 @@ class SelectionManager {
         this.fire(SELECTION_MANAGER.CHANGED,this)
     }
     isSelected(node) {
-        return (this.selected.indexOf(node) >= 0)
+        return this.selected.some((n)=>{
+            if(n.id && node.id) return n.id === node.id
+            return n === node
+        })
     }
     getSelection() {
         if(this.selected.length === 0) return null;
