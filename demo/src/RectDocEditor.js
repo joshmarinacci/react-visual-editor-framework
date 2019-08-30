@@ -115,4 +115,11 @@ export default class RectDocEditor extends TreeItemProvider {
     getApp() {
         return <RectDocApp provider={this}/>
     }
+
+    calculateContextMenu(item) {
+        console.log("doing it")
+        const cmds = []
+        cmds.push({divider: true})
+        return cmds
+    }
 }

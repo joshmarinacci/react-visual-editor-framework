@@ -2,7 +2,7 @@ import React, {Component} from 'react'
 import "../../css/grid.css"
 import TreeTable from '../../src/TreeTable'
 import PropSheet from '../../src/PropSheet'
-import {Spacer} from 'appy-comps'
+import {PopupContainer, Spacer} from 'appy-comps'
 import SelectionManager, {SELECTION_MANAGER} from '../../src/SelectionManager'
 import {TREE_ITEM_PROVIDER} from '../../src/TreeItemProvider'
 export class RectDocApp extends Component {
@@ -67,6 +67,7 @@ export class RectDocApp extends Component {
                 <button onClick={this.toggleRightPane}>toggle right</button>
             </div>
             <Resizer onMouseDown={this.resizeRight}/>
+            <PopupContainer/>
 
         </div>
 
