@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, {Component, useState} from 'react';
 import {PopupManager} from 'appy-comps'
 
 import selMan, {SELECTION_MANAGER} from "./SelectionManager";
@@ -14,6 +14,59 @@ export const TYPES = {
     ENUM:'enum',
     COLOR:'color',
     GROUP:'group',
+}
+
+export class ClusterDelegate {
+    constructor(provider,key, json) {
+        this.propsArray = []
+        this.propsMap = {}
+        this.propKeys = []
+        this.provider = provider
+        Object.keys(json).forEach(key => {
+            const def = json[key]
+            def.key = key
+            this.propsArray.push(def)
+            this.propsMap[def.key] = def
+            this.propKeys.push(key)
+        })
+    }
+    getPropertyKeys(item) {
+        return this.propKeys
+    }
+    getPropertyValue(item,key) {
+        return item[key]
+    }
+    getPropertyDefaultValue(key) {
+        return this.propsMap[key].default
+    }
+    getPropertyType(item,key) {
+        return this.propsMap[key].type
+    }
+    isPropertyLocked(item,key) {
+        return this.propsMap[key].locked
+    }
+    isPropertyLive(item,key) {
+        return this.propsMap[key].live
+    }
+    setPropertyValue(item,key,value) {
+        console.log("setting value to",value)
+        const oldValue = item[key]
+        item[key] = value
+        this.provider.fire(TREE_ITEM_PROVIDER.PROPERTY_CHANGED,{
+            provider: this.provider,
+            child:item,
+            propKey:key,
+            oldValue:oldValue,
+            newValue:value
+        })
+    }
+    hasHints(item,key) {
+        if(this.propsMap[key].hints) return true
+        return false
+    }
+    getHints(item,key) {
+        return this.propsMap[key].hints
+    }
 }
 
 class PropEditor extends Component {
@@ -156,58 +209,75 @@ class PropEditor extends Component {
 }
 
 const NumberEditor1 = ({cluster,obj,name}) => {
-    return <input type='number'
-                  value={cluster.getPropertyValue(obj,name)}
-                  onChange={(e)=>{
-                      // if(def.hasHints()) {
-                      //     if(def.getHints().hasOwnProperty('min')) {
-                      //         if(v < def.getHints().min) v = def.getHints().min
-                      //     }
-                      //     if(def.getHints().hasOwnProperty('max')) {
-                      //         if (v > def.getHints().max) v = def.getHints().max
-                      //     }
-                      // }
-                      let v = e.target.value
-                      // if(def.getHints().hasOwnProperty('min')) {
-                      //     if(v < def.getHints().min) v = def.getHints().min
-                      // }
-                      // if(def.getHints().hasOwnProperty('max')) {
-                      //     if (v > def.getHints().max) v = def.getHints().max
-                      // }
-                      if(!isNaN(parseFloat(v))) {
-                          if(cluster.hasHints(obj,name)) {
-                              const hints = cluster.getHints(obj, name)
-                              if('min' in hints) v = Math.max(v,hints.min)
-                              if('max' in hints) v = Math.min(v,hints.max)
-                          }
-                          cluster.setPropertyValue(obj, name, parseFloat(v))
+    const [value,setValue] = useState(cluster.getPropertyValue(obj,name))
+    let step = 1
+    if(cluster.hasHints(obj,name)) {
+        const hints = cluster.getHints(obj,name)
+        if('incrementValue' in hints) step = hints.incrementValue
+    }
+    function setObjectValue(v, offset=0) {
+        if(!isNaN(parseFloat(v))) {
+            v = parseFloat(v)
+            v += offset
+            if(cluster.hasHints(obj,name)) {
+                const hints = cluster.getHints(obj, name)
+                if('min' in hints) v = Math.max(v,hints.min)
+                if('max' in hints) v = Math.min(v,hints.max)
+            }
+            setValue(v)
+            cluster.setPropertyValue(obj, name, v)
+        }
+    }
+    return <input type='number' value={value} step={step}
+                  onChange={(e)=> {
+                      setValue(e.target.value)
+                      if(cluster.isPropertyLive(obj,name)) setObjectValue(e.target.value)
+                  }}
+                  onKeyDown={(e)=>{
+                      if(e.key === 'ArrowUp' && e.shiftKey) {
+                          e.preventDefault()
+                          setObjectValue(e.target.value,+10*step)
+                      }
+                      if(e.key === 'ArrowDown' && e.shiftKey) {
+                          e.preventDefault()
+                          setObjectValue(e.target.value,-10*step)
                       }
                   }}
+                  onKeyPress={(e)=>{
+                      if(e.charCode === 13) setObjectValue(e.target.value)
+                  }}
+                  onBlur={(e) => setObjectValue(e.target.value)}
     />
 }
 
 const BooleanEditor1 = ({cluster,obj,name}) => {
-    return <input type='checkbox'
-                  checked={cluster.getPropertyValue(obj,name)}
+    const [value,setValue] = useState(cluster.getPropertyValue(obj,name))
+    return <input type='checkbox' checked={value}
                   onChange={(e)=>{
-                    console.log('changing the checkbox')
+                      setValue(e.target.checked)
+                      cluster.setPropertyValue(obj,name,e.target.checked)
                   }}/>
 
 }
 
 const StringEditor1 = ({cluster,obj,name})=>{
+    const [value,setValue] = useState(cluster.getPropertyValue(obj,name))
     return <input type='string'
-                  value={cluster.getPropertyValue(obj,name)}
+                  value={value}
                   onChange={(e)=>{
-                      cluster.setPropertyValue(obj,name,e.target.value)
-                      // this.setState({value:e.target.value})
-                      // if(this.props.def.isLive()) {
-                      //     this.props.def.setValue(e.target.value)
-                      // }
+                      setValue(e.target.value)
+                      if(cluster.isPropertyLive(obj,name)) {
+                          cluster.setPropertyValue(obj, name, e.target.value)
+                      }
                   }}
-                  // onChange={this.props.onChange}
-                  // onKeyPress={this.keypressed}
-                  // onBlur={this.props.onBlur}
+                  onKeyPress={(e)=>{
+                      if(e.charCode === 13) {
+                          cluster.setPropertyValue(obj,name,value)
+                      }
+                  }}
+                  onBlur={(e)=>{
+                      cluster.setPropertyValue(obj,name,value)
+                  }}
     />
 }
 

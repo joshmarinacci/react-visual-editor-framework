@@ -2,57 +2,9 @@ import TreeItemProvider, {TREE_ITEM_PROVIDER} from '../../src/TreeItemProvider'
 import React from 'react'
 import {RectDocApp} from './RectDocApp'
 import {PROP_TYPES} from '../../src'
+import {ClusterDelegate} from '../../src/PropSheet'
 
 
-class ClusterDelegate {
-    constructor(provider,key, json) {
-        this.propsArray = []
-        this.propsMap = {}
-        this.propKeys = []
-        this.provider = provider
-        Object.keys(json).forEach(key => {
-            const def = json[key]
-            def.key = key
-            this.propsArray.push(def)
-            this.propsMap[def.key] = def
-            this.propKeys.push(key)
-        })
-    }
-    getPropertyKeys(item) {
-        return this.propKeys
-    }
-    getPropertyValue(item,key) {
-        return item[key]
-    }
-    getPropertyDefaultValue(key) {
-        return this.propsMap[key].default
-    }
-    getPropertyType(item,key) {
-        return this.propsMap[key].type
-    }
-    isPropertyLocked(item,key) {
-        return this.propsMap[key].locked
-    }
-    setPropertyValue(item,key,value) {
-        console.log("setting value to",value)
-        const oldValue = item[key]
-        item[key] = value
-        this.provider.fire(TREE_ITEM_PROVIDER.PROPERTY_CHANGED,{
-            provider: this.provider,
-            child:item,
-            propKey:key,
-            oldValue:oldValue,
-            newValue:value
-        })
-    }
-    hasHints(item,key) {
-        if(this.propsMap[key].hints) return true
-        return false
-    }
-    getHints(item,key) {
-        return this.propsMap[key].hints
-    }
-}
 
 function makeClusterDef(provider,json) {
     const obj = {}
@@ -96,30 +48,34 @@ const SquareDef = {
         x:{
             type:PROP_TYPES.NUMBER,
             default:0,
+            live:true,
             hints: {
-                incrementValue:0.1,
+                incrementValue:1,
             }
         },
         y:{
             type:PROP_TYPES.NUMBER,
             default:0,
+            live:true,
             hints: {
-                incrementValue:0.1,
+                incrementValue:1,
             }
         },
         w: {
             type: PROP_TYPES.NUMBER,
             default: 100,
+            live:true,
             hints: {
-                incrementValue:0.1,
+                incrementValue:1,
                 min:1,
-            }
+            },
         },
         h: {
             type: PROP_TYPES.NUMBER,
             default: 100,
+            live:true,
             hints: {
-                incrementValue:0.1,
+                incrementValue:1,
                 min:1,
             }
         },
@@ -127,7 +83,8 @@ const SquareDef = {
     style: {
         color: {
             type: PROP_TYPES.STRING,
-            default: 'blue'
+            default: 'blue',
+            live:false,
         },
     }
 }
@@ -154,20 +111,20 @@ function makeFromDef(clusters, override) {
 export default class RectDocEditor extends TreeItemProvider {
     constructor(options) {
         super(options)
-        this.squareDef = makeClusterDef(this,SquareDef)
-        this.groupDef = makeClusterDef(this,GroupDef)
+        this.squareClusters = makeClusterDef(this,SquareDef)
+        this.groupClusters = makeClusterDef(this,GroupDef)
         this.root = this.makeEmptyRoot()
     }
 
     makeEmptyRoot(doc) {
         const root = {id:'root',type:'root',children:[]}
-        const square1 = makeFromDef(this.squareDef,{id:'sq1',w:50})
+        const square1 = makeFromDef(this.squareClusters,{id:'sq1',w:50})
         root.children.push(square1)
-        const square2 = makeFromDef(this.squareDef,{id:'sq2',x:150,y:20,w:30,h:30,color:'red'})
+        const square2 = makeFromDef(this.squareClusters,{id:'sq2',x:150,y:20,w:30,h:30,color:'red'})
         root.children.push(square2)
-        const square3 = makeFromDef(this.squareDef,{id:'sq3',x:30,y:220,w:30,h:30,color:'green'})
+        const square3 = makeFromDef(this.squareClusters,{id:'sq3',x:30,y:220,w:30,h:30,color:'green'})
         root.children.push(square3)
-        const g1 = makeFromDef(this.groupDef,{id:'g1'})
+        const g1 = makeFromDef(this.groupClusters,{id:'g1'})
         root.children.push(g1)
         return root
     }
@@ -177,8 +134,8 @@ export default class RectDocEditor extends TreeItemProvider {
     }
     getPropertyClusters(item) {
         if(item) {
-            if (item.type === 'square') return this.squareDef
-            if (item.type === 'group') return this.groupDef
+            if (item.type === 'square') return this.squareClusters
+            if (item.type === 'group') return this.groupClusters
         }
         return {}
     }
