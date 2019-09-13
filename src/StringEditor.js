@@ -6,6 +6,7 @@ export class StringEditor extends Component {
     }
 
     render() {
+        /*
         const prop = this.props.def;
         if (prop.hasHints()) {
             const hints = prop.getHints()
@@ -16,6 +17,7 @@ export class StringEditor extends Component {
                 />
             }
         }
+         */
         return <input type='string'
                       value={this.props.value}
                       onChange={this.props.onChange}

@@ -3,49 +3,171 @@ import React from 'react'
 import {RectDocApp} from './RectDocApp'
 import {PROP_TYPES} from '../../src'
 
+
+class ClusterDelegate {
+    constructor(provider,key, json) {
+        this.propsArray = []
+        this.propsMap = {}
+        this.propKeys = []
+        this.provider = provider
+        Object.keys(json).forEach(key => {
+            const def = json[key]
+            def.key = key
+            this.propsArray.push(def)
+            this.propsMap[def.key] = def
+            this.propKeys.push(key)
+        })
+    }
+    getPropertyKeys(item) {
+        return this.propKeys
+    }
+    getPropertyValue(item,key) {
+        return item[key]
+    }
+    getPropertyDefaultValue(key) {
+        return this.propsMap[key].default
+    }
+    getPropertyType(item,key) {
+        return this.propsMap[key].type
+    }
+    isPropertyLocked(item,key) {
+        return this.propsMap[key].locked
+    }
+    setPropertyValue(item,key,value) {
+        console.log("setting value to",value)
+        const oldValue = item[key]
+        item[key] = value
+        this.provider.fire(TREE_ITEM_PROVIDER.PROPERTY_CHANGED,{
+            provider: this.provider,
+            child:item,
+            propKey:key,
+            oldValue:oldValue,
+            newValue:value
+        })
+    }
+    hasHints(item,key) {
+        if(this.propsMap[key].hints) return true
+        return false
+    }
+    getHints(item,key) {
+        return this.propsMap[key].hints
+    }
+}
+
+function makeClusterDef(provider,json) {
+    const obj = {}
+    Object.keys(json).map(clusterKey => {
+        obj[clusterKey] = new ClusterDelegate(provider,clusterKey,json[clusterKey])
+    })
+    return obj
+}
+
+const GroupDef = {
+    base: {
+        id: {
+            type: PROP_TYPES.STRING,
+            name: 'ID',
+            locked: true,
+        },
+        type: {
+            type: PROP_TYPES.STRING,
+            name:'type',
+            locked:true,
+            default:'group',
+        }
+    }
+}
+
+const SquareDef = {
+    base: { //the base cluster
+        id: {
+            type: PROP_TYPES.STRING,
+            name: 'ID',
+            locked: true,
+        },
+        type: {
+            type: PROP_TYPES.STRING,
+            name:'type',
+            locked:true,
+            default:'square',
+        }
+    },
+    geom:{
+        x:{
+            type:PROP_TYPES.NUMBER,
+            default:0,
+            hints: {
+                incrementValue:0.1,
+            }
+        },
+        y:{
+            type:PROP_TYPES.NUMBER,
+            default:0,
+            hints: {
+                incrementValue:0.1,
+            }
+        },
+        w: {
+            type: PROP_TYPES.NUMBER,
+            default: 100,
+            hints: {
+                incrementValue:0.1,
+                min:1,
+            }
+        },
+        h: {
+            type: PROP_TYPES.NUMBER,
+            default: 100,
+            hints: {
+                incrementValue:0.1,
+                min:1,
+            }
+        },
+    },
+    style: {
+        color: {
+            type: PROP_TYPES.STRING,
+            default: 'blue'
+        },
+    }
+}
+
+
+
+
+function makeFromDef(clusters, override) {
+    const obj = {}
+    Object.keys(clusters).forEach(cKey => {
+        const cluster = clusters[cKey]
+        cluster.getPropertyKeys().forEach(key => {
+            console.log(key)
+            if(key in override) {
+                obj[key] = override[key]
+            } else {
+                obj[key] = cluster.getPropertyDefaultValue(key)
+            }
+        })
+    })
+    return obj
+}
+
 export default class RectDocEditor extends TreeItemProvider {
     constructor(options) {
         super(options)
+        this.squareDef = makeClusterDef(this,SquareDef)
+        this.groupDef = makeClusterDef(this,GroupDef)
         this.root = this.makeEmptyRoot()
     }
 
     makeEmptyRoot(doc) {
         const root = {id:'root',type:'root',children:[]}
-        const square1 = {
-            type:'square',
-            id:'sq1',
-            x:100,
-            y:100,
-            w:100,
-            h:100,
-            color:'blue',
-        }
+        const square1 = makeFromDef(this.squareDef,{id:'sq1',w:50})
         root.children.push(square1)
-        const square2 = {
-            type:'square',
-            id:'sq2',
-            x:150,
-            y:20,
-            w:30,
-            h:30,
-            color:'red',
-        }
+        const square2 = makeFromDef(this.squareDef,{id:'sq2',x:150,y:20,w:30,h:30,color:'red'})
         root.children.push(square2)
-        const square3 = {
-            type:'square',
-            id:'sq3',
-            x:30,
-            y:220,
-            w:30,
-            h:30,
-            color:'green',
-        }
+        const square3 = makeFromDef(this.squareDef,{id:'sq3',x:30,y:220,w:30,h:30,color:'green'})
         root.children.push(square3)
-
-        const g1 = {
-            type:'group',
-            id:'g1',
-        }
+        const g1 = makeFromDef(this.groupDef,{id:'g1'})
         root.children.push(g1)
         return root
     }
@@ -53,36 +175,12 @@ export default class RectDocEditor extends TreeItemProvider {
     getSceneRoot() {
         return this.root
     }
-
-    getProperties(item) {
-        let defs = []
-        if(!item) return defs;
-        defs.push({
-            key:'id',
-            name:'ID',
-            type:PROP_TYPES.STRING,
-            locked:true,
-            value:item.id
-        })
-        if(item.type === 'square') {
-            defs.push({key:'x',name:'X',type:PROP_TYPES.NUMBER, value:item.x})
-            defs.push({key:'y',name:'Y',type:PROP_TYPES.NUMBER, value:item.y})
-            defs.push({key:'w',name:'Width',type:PROP_TYPES.NUMBER, value:item.w})
-            defs.push({key:'h',name:'Height',type:PROP_TYPES.NUMBER, value:item.h})
+    getPropertyClusters(item) {
+        if(item) {
+            if (item.type === 'square') return this.squareDef
+            if (item.type === 'group') return this.groupDef
         }
-
-        return defs;
-    }
-
-    setPropertyValue(item, def, value) {
-        item[def.key] = value
-        this.fire(TREE_ITEM_PROVIDER.PROPERTY_CHANGED,{
-            provider: this,
-            child:item,
-            propKey:def.key,
-            oldValue:def.value,
-            newValue:value
-        })
+        return {}
     }
 
     canAddChild(item,target) {

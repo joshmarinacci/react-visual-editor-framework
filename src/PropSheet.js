@@ -4,9 +4,7 @@ import {PopupManager} from 'appy-comps'
 import selMan, {SELECTION_MANAGER} from "./SelectionManager";
 import HSLUVColorPicker from "./HSLUVColorPicker";
 import {TREE_ITEM_PROVIDER} from './TreeItemProvider'
-import {StringEditor} from "./StringEditor";
-import {EnumEditor} from "./EnumEditor";
-import {ArrayEditor} from "./ArrayEditor";
+
 import "../css/propsheet.css"
 
 export const TYPES = {
@@ -22,7 +20,7 @@ class PropEditor extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            value:props.def.getValue()
+            // value:props.cluster.getPropertyValue(props.item, props.propKey)
         }
     }
     componentWillReceiveProps(nextProps) {
@@ -31,13 +29,14 @@ class PropEditor extends Component {
         }
     }
     shouldComponentUpdate(nextProps, nextState) {
-        if(nextProps.def.getType() === 'group') return true
+        // if(nextProps.def.getType() === 'group') return true
         if(this.state.value !== nextState.value) return true
+        /*
         if(this.props.def.getKey() === nextProps.def.getKey()) {
             if(this.props.def.getValue() === nextProps.def.getValue()) {
                 return false
             }
-        }
+        }*/
         return true
     }
     changed = (e) => {
@@ -115,40 +114,101 @@ class PropEditor extends Component {
         PopupManager.show(<HSLUVColorPicker onSelect={this.colorChanged} value={this.state.value}/>, e.target)
     }
     render() {
-        const prop = this.props.def;
-        const obj = selMan.getSelection();
-        const provider = this.props.provider
-        if (prop.isCustom()) return this.props.provider.createCustomEditor(this.props.item, prop, provider, this.state.value, this.customChanged)
-        if (prop.isLocked()) return <i>{prop.getValue()}</i>
-        if (prop.isType(TYPES.STRING))  return <StringEditor value={this.state.value}
-                                 onChange={this.changed}
-                                 onBlur={this.commit} onCommit={this.commit}
-                                 def={prop} obj={obj}
-                                 provider={this.props.provider}/>
-        if (prop.isType(TYPES.NUMBER))  {
-            let step = 1
-            if(prop.hasHints()) {
-                const hints = prop.getHints()
-                if (hints.incrementValue) {
-                    step = hints.incrementValue
-                }
-            }
-            return <input type='number'
-                          value={this.state.value}
-                          onChange={this.changed}
-                          onKeyPress={this.keypressed}
-                          onKeyDown={this.numberKeyDown}
-                          onBlur={this.commit}
-                          step={step}/>
-        }
-        if (prop.isType(TYPES.BOOLEAN)) return <input type='checkbox'
-                                                  checked={this.state.value}
-                                                  onChange={this.booleanChanged}/>
-        if (prop.isType(TYPES.ENUM)) return <EnumEditor value={this.state.value} onChange={this.enumChanged} def={prop} obj={obj} provider={this.props.provider}/>
-        if (prop.isType(TYPES.COLOR)) return <button style={{ backgroundColor:this.state.value}} onClick={this.openColorEditor}>{this.state.value}</button>
-        if (prop.isType('array')) return <ArrayEditor value={this.state.value} onChange={this.arrayChanged} def={prop} obj={obj} provider={this.props.provider}/>
-        return <b>{prop.getType()}:{prop.getValue()}</b>
+        // const def = this.props.def;
+        // const obj = selMan.getSelection();
+        // const provider = this.props.provider
+        // if (def.isCustom()) return this.props.provider.createCustomEditor(this.props.item, def, provider, this.state.value, this.customChanged)
+        // if (def.isLocked()) return <i>{def.getValue()}</i>
+        // if (def.isType(TYPES.STRING))  return <StringEditor value={this.state.value}
+        //                          onChange={this.changed}
+        //                          onBlur={this.commit} onCommit={this.commit}
+        //                          def={def} obj={obj}
+        //                          provider={this.props.provider}/>
+        // if (def.isType(TYPES.NUMBER))  {
+        //     let step = 1
+        //     if(def.hasHints()) {
+        //         const hints = def.getHints()
+        //         if (hints.incrementValue) {
+        //             step = hints.incrementValue
+        //         }
+        //     }
+        //     return <input type='number'
+        //                   value={this.state.value}
+        //                   onChange={this.changed}
+        //                   onKeyPress={this.keypressed}
+        //                   onKeyDown={this.numberKeyDown}
+        //                   onBlur={this.commit}
+        //                   step={step}/>
+        // }
+        // if (def.isType(TYPES.ENUM)) return <EnumEditor value={this.state.value} onChange={this.enumChanged} def={def} obj={obj} provider={this.props.provider}/>
+        // if (def.isType(TYPES.COLOR)) return <button style={{ backgroundColor:this.state.value}} onClick={this.openColorEditor}>{this.state.value}</button>
+        // if (def.isType('array')) return <ArrayEditor value={this.state.value} onChange={this.arrayChanged} def={def} obj={obj} provider={this.props.provider}/>
+        const c = this.props.cluster
+        const it = this.props.item
+        const key = this.props.propKey
+        const prov = this.props.provider
+        if(c.isPropertyLocked(it,key)) return <i>{c.getPropertyValue(it,key)}</i>
+        if(c.getPropertyType(it,key) === TYPES.BOOLEAN) return <BooleanEditor1 cluster={c} obj={it} name={key}/>
+        if(c.getPropertyType(it,key) === TYPES.NUMBER)  return <NumberEditor1 cluster={c} obj={it} name={key}/>
+        if(c.getPropertyType(it,key) === TYPES.STRING)  return <StringEditor1 cluster={c} obj={it} name={key}/>
+        return <b>{c.getPropertyType(it,key)}:{c.getPropertyValue(it,key)}</b>
     }
+}
+
+const NumberEditor1 = ({cluster,obj,name}) => {
+    return <input type='number'
+                  value={cluster.getPropertyValue(obj,name)}
+                  onChange={(e)=>{
+                      // if(def.hasHints()) {
+                      //     if(def.getHints().hasOwnProperty('min')) {
+                      //         if(v < def.getHints().min) v = def.getHints().min
+                      //     }
+                      //     if(def.getHints().hasOwnProperty('max')) {
+                      //         if (v > def.getHints().max) v = def.getHints().max
+                      //     }
+                      // }
+                      let v = e.target.value
+                      // if(def.getHints().hasOwnProperty('min')) {
+                      //     if(v < def.getHints().min) v = def.getHints().min
+                      // }
+                      // if(def.getHints().hasOwnProperty('max')) {
+                      //     if (v > def.getHints().max) v = def.getHints().max
+                      // }
+                      if(!isNaN(parseFloat(v))) {
+                          if(cluster.hasHints(obj,name)) {
+                              const hints = cluster.getHints(obj, name)
+                              if('min' in hints) v = Math.max(v,hints.min)
+                              if('max' in hints) v = Math.min(v,hints.max)
+                          }
+                          cluster.setPropertyValue(obj, name, parseFloat(v))
+                      }
+                  }}
+    />
+}
+
+const BooleanEditor1 = ({cluster,obj,name}) => {
+    return <input type='checkbox'
+                  checked={cluster.getPropertyValue(obj,name)}
+                  onChange={(e)=>{
+                    console.log('changing the checkbox')
+                  }}/>
+
+}
+
+const StringEditor1 = ({cluster,obj,name})=>{
+    return <input type='string'
+                  value={cluster.getPropertyValue(obj,name)}
+                  onChange={(e)=>{
+                      cluster.setPropertyValue(obj,name,e.target.value)
+                      // this.setState({value:e.target.value})
+                      // if(this.props.def.isLive()) {
+                      //     this.props.def.setValue(e.target.value)
+                      // }
+                  }}
+                  // onChange={this.props.onChange}
+                  // onKeyPress={this.keypressed}
+                  // onBlur={this.props.onBlur}
+    />
 }
 
 /*class PaletteColorPicker extends Component {
@@ -198,14 +258,11 @@ export default class PropSheet extends Component {
         this.props.provider.off(TREE_ITEM_PROVIDER.PROPERTY_CHANGED,this.h2)
     }
     render() {
-        const props = this.calculateGroups(this.calculateProps())
         const item = selMan.getSelection()
-        return <div className="prop-sheet">{props.map((prop, i) => {
-            return [
-                <label key={prop.getKey()+'-label'} title={prop.getKey()}>{prop.getName()}</label>,
-                this.renderIndeterminate(prop,i),
-                <PropEditor key={prop.getKey()+'-editor'} def={prop} provider={this.props.provider} item={item}/>
-            ]
+        const prov = this.props.provider
+        let clusters = prov.getPropertyClusters(item)
+        return <div className="prop-wrapper">{Object.keys(clusters).map(key => {
+            return <PropSection key={key} title={key} cluster={clusters[key]} prov={prov} item={item}/>
         })}</div>
     }
     renderIndeterminate(prop, i) {
@@ -233,7 +290,6 @@ export default class PropSheet extends Component {
             return multi
         });
     }
-
     calculateGroups(props) {
         const group_defs = props.filter(p => p.getType() === TYPES.GROUP)
         group_defs.forEach(def => {
@@ -242,6 +298,31 @@ export default class PropSheet extends Component {
             props = props.filter(p => group_keys.indexOf(p.getKey())<0)
         })
         return props
+    }
+}
+
+
+
+class PropSection extends Component {
+    render() {
+        return <div className="prop-sheet">
+            <header>{this.props.title}</header>
+            {
+                this.props.cluster.getPropertyKeys(this.props.item).map(key => {
+                    return [
+                        <label key={key+'-label'}>{key}</label>,
+                        this.renderPropEditor(this.props.cluster,this.props.item,key)
+                        ]
+                })
+            }
+        </div>
+    }
+
+    calculateDefs() {
+    }
+
+    renderPropEditor(cluster, item, key) {
+        return <PropEditor key={key+'-editor'} propKey={key} provider={this.props.provider} item={item} cluster={cluster}/>
     }
 }
 
