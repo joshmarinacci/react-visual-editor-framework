@@ -265,7 +265,8 @@ const BooleanEditor1 = ({cluster,obj,name}) => {
 }
 
 const StringEditor1 = ({cluster,obj,name})=>{
-    const [value,setValue] = useState(cluster.getPropertyValue(obj,name))
+    const pv = cluster.getPropertyValue(obj,name)
+    const [value,setValue] = useState(pv)
     return <input type='string'
                   value={value}
                   onChange={(e)=>{

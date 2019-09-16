@@ -26,6 +26,10 @@ const GroupDef = {
             name:'type',
             locked:true,
             default:'group',
+        },
+        title: {
+            type: PROP_TYPES.STRING,
+            name:'title',
         }
     }
 }
