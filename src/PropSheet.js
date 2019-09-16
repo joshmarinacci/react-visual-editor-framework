@@ -1,5 +1,5 @@
-import React, {Component, useState} from 'react';
-import {PopupManager} from 'appy-comps'
+import React, {Component, useState, useContext} from 'react';
+import {HBox, PopupManager, PopupManagerContext, VBox} from 'appy-comps'
 
 import selMan, {SELECTION_MANAGER} from "./SelectionManager";
 import HSLUVColorPicker from "./HSLUVColorPicker";
@@ -47,6 +47,9 @@ export class ClusterDelegate {
     }
     isPropertyLive(item,key) {
         return this.propsMap[key].live
+    }
+    getPropertyEnumValues(item,key) {
+        return this.propsMap[key].values
     }
     setPropertyValue(item,key,value) {
         console.log("setting value to",value)
@@ -202,8 +205,9 @@ class PropEditor extends Component {
         const prov = this.props.provider
         if(c.isPropertyLocked(it,key)) return <i>{c.getPropertyValue(it,key)}</i>
         if(c.getPropertyType(it,key) === TYPES.BOOLEAN) return <BooleanEditor1 cluster={c} obj={it} name={key}/>
-        if(c.getPropertyType(it,key) === TYPES.NUMBER)  return <NumberEditor1 cluster={c} obj={it} name={key}/>
-        if(c.getPropertyType(it,key) === TYPES.STRING)  return <StringEditor1 cluster={c} obj={it} name={key}/>
+        if(c.getPropertyType(it,key) === TYPES.NUMBER)  return <NumberEditor1  cluster={c} obj={it} name={key}/>
+        if(c.getPropertyType(it,key) === TYPES.STRING)  return <StringEditor1  cluster={c} obj={it} name={key}/>
+        if(c.getPropertyType(it,key) === TYPES.ENUM)    return <EnumEditor1    cluster={c} obj={it} name={key}/>
         return <b>{c.getPropertyType(it,key)}:{c.getPropertyValue(it,key)}</b>
     }
 }
@@ -281,35 +285,41 @@ const StringEditor1 = ({cluster,obj,name})=>{
     />
 }
 
-/*class PaletteColorPicker extends Component {
-    chooseColor(c) {
-        this.props.onSelect(c);
+const EnumEditor1 = ({cluster,obj,name}) => {
+    const [value,setValue] = useState(cluster.getPropertyValue(obj,name))
+    const context = useContext(PopupManagerContext)
+    const Rend = cluster.get
+    function renderValue(value) {
+        return value
     }
-    render() {
-        const style = {
-            display:'flex',
-            flexDirection:'row',
-            flexWrap:'wrap'
-        }
-        return <div style={style}>
-            {Object.keys(COLORS2).map((key,i) => {
-                let color = COLORS2[key];
-                let scolor = color.toString(16);
-                while(scolor.length < 6) scolor = "0"+scolor
-                scolor = '#' +scolor
-                let style = {
-                    backgroundColor:scolor,
-                    color:'red'
-                }
-                return <button key={key}
-                               style={style}
-                               onClick={this.chooseColor.bind(this, scolor)}
-                >&nbsp;</button>
-            })}
-        </div>
+    function open(e) {
+        context.show(<EnumPicker
+            values={cluster.getPropertyEnumValues(obj,name)}
+            // renderer={this.calculateRenderer()}
+            onSelect={(val)=>{
+                setValue(val)
+                context.hide()
+                console.log("sset the value")
+            }}
+        />, e.target)
     }
+    return <button onClick={open}>{renderValue(value)}</button>
 }
-*/
+
+const EnumPicker = ({values, onSelect}) => {
+    // const Rend = props.renderer
+    const items = values.map(val=>
+        <HBox
+            key={val}
+            onClick={(e)=>onSelect(val)}>
+            <b>{val}</b>
+            {/*<Rend value={val} def={props.def} obj={props.obj} provider={props.provider}/>*/}
+        </HBox>
+    )
+    return <VBox className="popup-menu">{items}</VBox>
+}
+
+
 export default class PropSheet extends Component {
     constructor(props) {
         super(props)
@@ -370,7 +380,6 @@ export default class PropSheet extends Component {
         return props
     }
 }
-
 
 
 class PropSection extends Component {

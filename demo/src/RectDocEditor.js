@@ -82,9 +82,10 @@ const SquareDef = {
     },
     style: {
         color: {
-            type: PROP_TYPES.STRING,
+            type: PROP_TYPES.ENUM,
             default: 'blue',
             live:false,
+            values:['red','green','blue']
         },
     }
 }
