@@ -73,132 +73,7 @@ export class ClusterDelegate {
 }
 
 class PropEditor extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            // value:props.cluster.getPropertyValue(props.item, props.propKey)
-        }
-    }
-    componentWillReceiveProps(nextProps) {
-        if(this.props.def !== nextProps.def) {
-            this.setState({value:nextProps.def.getValue()})
-        }
-    }
-    shouldComponentUpdate(nextProps, nextState) {
-        // if(nextProps.def.getType() === 'group') return true
-        if(this.state.value !== nextState.value) return true
-        /*
-        if(this.props.def.getKey() === nextProps.def.getKey()) {
-            if(this.props.def.getValue() === nextProps.def.getValue()) {
-                return false
-            }
-        }*/
-        return true
-    }
-    changed = (e) => {
-        if(this.props.def.isType(TYPES.STRING)) {
-            this.setState({value:e.target.value})
-            if(this.props.def.isLive()) {
-                this.props.def.setValue(e.target.value)
-            }
-        }
-        if(this.props.def.isType(TYPES.NUMBER)) this.updateNum(e.target.value)
-        if(this.props.def.isType(TYPES.BOOLEAN)) this.setState({value:e.target.checked})
-    }
-    revert = (e) => {
-        this.setState({value:this.props.def.getValue()})
-    }
-    customChanged = value => {
-        if(this.props.def.isType(TYPES.COLOR)) return this.colorChanged(value)
-        this.setState({value:value})
-        this.props.def.setValue(value)
-    }
-    keypressed = (e) => {
-        if(e.charCode === 13) this.commit();
-    }
-    updateNum = (v) => {
-        const def = this.props.def;
-        if(def.hasHints()) {
-            if(def.getHints().hasOwnProperty('min')) {
-                if(v < def.getHints().min) v = def.getHints().min
-            }
-            if(def.getHints().hasOwnProperty('max')) {
-                if (v > def.getHints().max) v = def.getHints().max
-            }
-        }
-        this.setState({value:v})
-        if(!isNaN(parseFloat(v))) {
-            def.setValue(parseFloat(v))
-        }
-    }
-    numberKeyDown = (e) => {
-        if(e.key === 'ArrowUp' && e.shiftKey) {
-            e.preventDefault()
-            this.updateNum(this.state.value+10)
-        }
-        if(e.key === 'ArrowDown' && e.shiftKey) {
-            e.preventDefault()
-            this.updateNum(this.state.value-10)
-        }
-    }
-    booleanChanged = (e) => {
-        this.setState({value:e.target.checked});
-        this.props.def.setValue(e.target.checked)
-    }
-    enumChanged = (value) => {
-        this.setState({value:value})
-        this.props.def.setValue(value)
-    }
-    arrayChanged = (value) => {
-        this.setState({value:value})
-        this.props.def.setValue(value)
-    }
-    colorChanged = (color) => {
-        this.setState({value:color});
-        this.props.def.setValue(color)
-    }
-    commit = () => {
-        try {
-            this.props.def.setValue(this.state.value)
-        } catch (e) {
-            console.log("commit threw an error",e)
-            console.log("message is",e.message)
-            this.revert()
-        }
-    }
-    openColorEditor = (e) => {
-        PopupManager.show(<HSLUVColorPicker onSelect={this.colorChanged} value={this.state.value}/>, e.target)
-    }
     render() {
-        // const def = this.props.def;
-        // const obj = selMan.getSelection();
-        // const provider = this.props.provider
-        // if (def.isCustom()) return this.props.provider.createCustomEditor(this.props.item, def, provider, this.state.value, this.customChanged)
-        // if (def.isLocked()) return <i>{def.getValue()}</i>
-        // if (def.isType(TYPES.STRING))  return <StringEditor value={this.state.value}
-        //                          onChange={this.changed}
-        //                          onBlur={this.commit} onCommit={this.commit}
-        //                          def={def} obj={obj}
-        //                          provider={this.props.provider}/>
-        // if (def.isType(TYPES.NUMBER))  {
-        //     let step = 1
-        //     if(def.hasHints()) {
-        //         const hints = def.getHints()
-        //         if (hints.incrementValue) {
-        //             step = hints.incrementValue
-        //         }
-        //     }
-        //     return <input type='number'
-        //                   value={this.state.value}
-        //                   onChange={this.changed}
-        //                   onKeyPress={this.keypressed}
-        //                   onKeyDown={this.numberKeyDown}
-        //                   onBlur={this.commit}
-        //                   step={step}/>
-        // }
-        // if (def.isType(TYPES.ENUM)) return <EnumEditor value={this.state.value} onChange={this.enumChanged} def={def} obj={obj} provider={this.props.provider}/>
-        // if (def.isType(TYPES.COLOR)) return <button style={{ backgroundColor:this.state.value}} onClick={this.openColorEditor}>{this.state.value}</button>
-        // if (def.isType('array')) return <ArrayEditor value={this.state.value} onChange={this.arrayChanged} def={def} obj={obj} provider={this.props.provider}/>
         const c = this.props.cluster
         const it = this.props.item
         const key = this.props.propKey
@@ -402,7 +277,7 @@ class PropSection extends Component {
     }
 
     renderPropEditor(cluster, item, key) {
-        return <PropEditor key={key+'-editor'} propKey={key} provider={this.props.provider} item={item} cluster={cluster}/>
+        return <PropEditor key={key+'-editor-'+item.id} propKey={key} provider={this.props.provider} item={item} cluster={cluster}/>
     }
 }
 

@@ -177,8 +177,12 @@ export default class RectDocEditor extends TreeItemProvider {
     }
 
     calculateContextMenu(item) {
-        console.log("doing it")
         const cmds = []
+        cmds.push({
+            title:'do thing',
+            icon:"boo",
+            fun:()=>console.log("doing a function")
+        })
         cmds.push({divider: true})
         return cmds
     }
