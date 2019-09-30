@@ -5,6 +5,14 @@ import {PROP_TYPES} from '../../src'
 import {ClusterDelegate} from '../../src/PropSheet'
 
 
+const ColorValueRenderer = ({object, key, value}) => {
+    return <b style={{
+        backgroundColor:value,
+        border:'black',
+        padding: '0.5em',
+    }}>{value}</b>
+}
+
 
 function makeClusterDef(provider,json) {
     const obj = {}
@@ -89,7 +97,8 @@ const SquareDef = {
             type: PROP_TYPES.ENUM,
             default: 'blue',
             live:false,
-            values:['red','green','blue']
+            values:['red','green','blue'],
+            renderer: ColorValueRenderer,
         },
     }
 }

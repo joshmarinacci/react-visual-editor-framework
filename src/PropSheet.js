@@ -22,12 +22,16 @@ export class ClusterDelegate {
         this.propsMap = {}
         this.propKeys = []
         this.provider = provider
+        this.renderers = {}
         Object.keys(json).forEach(key => {
             const def = json[key]
             def.key = key
             this.propsArray.push(def)
             this.propsMap[def.key] = def
             this.propKeys.push(key)
+            if(def.type === TYPES.ENUM) {
+                this.renderers[def.key] = def.renderer
+            }
         })
     }
     getPropertyKeys(item) {
@@ -51,6 +55,9 @@ export class ClusterDelegate {
     getPropertyEnumValues(item,key) {
         return this.propsMap[key].values
     }
+    getRendererForEnumProperty(item,key,value) {
+        return this.propsMap[key].renderer
+    }
     setPropertyValue(item,key,value) {
         console.log("setting value to",value)
         const oldValue = item[key]
@@ -70,6 +77,10 @@ export class ClusterDelegate {
     getHints(item,key) {
         return this.propsMap[key].hints
     }
+}
+
+const StandardEnumRenderer = ({object, key, value}) => {
+    return <span>{value}</span>
 }
 
 class PropEditor extends Component {
@@ -164,32 +175,35 @@ const StringEditor1 = ({cluster,obj,name})=>{
 const EnumEditor1 = ({cluster,obj,name}) => {
     const [value,setValue] = useState(cluster.getPropertyValue(obj,name))
     const context = useContext(PopupManagerContext)
-    const Rend = cluster.get
-    function renderValue(value) {
-        return value
-    }
+    let EnumItemRenderer = cluster.getRendererForEnumProperty(obj,name,value)
+    if(!EnumItemRenderer) EnumItemRenderer = StandardEnumRenderer
+
+    let selectedRenderedValue = <EnumItemRenderer object={obj} name={name} value={value}/>
+
     function open(e) {
         context.show(<EnumPicker
-            values={cluster.getPropertyEnumValues(obj,name)}
-            // renderer={this.calculateRenderer()}
+            object={obj}
+            cluster={cluster}
+            name={name}
+            Renderer={EnumItemRenderer}
             onSelect={(val)=>{
                 setValue(val)
                 context.hide()
-                console.log("sset the value")
+                cluster.setPropertyValue(obj,name,val)
             }}
         />, e.target)
     }
-    return <button onClick={open}>{renderValue(value)}</button>
+    return <button onClick={open}>{selectedRenderedValue}</button>
 }
 
-const EnumPicker = ({values, onSelect}) => {
-    // const Rend = props.renderer
+const EnumPicker = ({object, name, onSelect, cluster, Renderer}) => {
+    const values = cluster.getPropertyEnumValues(object,name)
     const items = values.map(val=>
         <HBox
             key={val}
             onClick={(e)=>onSelect(val)}>
-            <b>{val}</b>
-            {/*<Rend value={val} def={props.def} obj={props.obj} provider={props.provider}/>*/}
+            {/*<b>{val}</b>*/}
+            <Renderer object={object} name={name} value={val}/>
         </HBox>
     )
     return <VBox className="popup-menu">{items}</VBox>
